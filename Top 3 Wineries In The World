@@ -1,0 +1,56 @@
+Problem : Top 3 Wineries In The World (PAID)
+Wine Magazine
+Hard
+ID 10042
+
+Description:
+Find the top 3 wineries in each country based on the average points earned. In case there is a tie, order the wineries by winery name in ascending order. Output the country along with the best, second best, and third best wineries. If there is no second winery (NULL value) output 'No second winery' and if there is no third winery output 'No third winery'. For outputting wineries format them like this: "winery (avg_points)"
+table structure:
+id:
+int
+country:
+description:
+designation:
+points:
+int
+price:
+float
+province:
+region_1:
+region_2:
+variety:
+winery:
+
+
+Solution: 1
+select country,
+coalesce(max(top_winery), 'No Top Winery') top_winery,
+coalesce(max(second_winery), 'No second Winery') second_winery,
+coalesce(max(third_winery), 'No Third Winery') third_winery
+From(
+SELECT COUNTRY, 
+CASE WHEN RANKING = 1 THEN winery || '(' || Round(avg_points) || ')'
+else null
+end
+as top_winery,
+CASE WHEN RANKING = 2 THEN winery || '(' || Round(avg_points) || ')'
+else null
+end
+as second_winery,
+CASE WHEN RANKING = 3 THEN winery || '(' || Round(avg_points) || ')'
+else null
+end
+as third_winery
+FROM (
+SELECT country, winery, avg_points, 
+DENSE_RANK() OVER(PARTITION BY country 
+ORDER BY avg_points DESC, winery ASC) ranking
+FROM (
+ -- compute the avg points for each winery
+SELECT country, winery, AVG(points) AS avg_points
+FROM winemag_p1
+GROUP BY 1,2
+) compute_avg_points
+) rank_wineries
+) as select_top_3_wineries
+group by 1
